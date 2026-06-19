@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import pandas as pd
 import requests
@@ -16,7 +17,7 @@ class StooqSource:
     name = "stooq"
     requires_key = False
 
-    def fetch(self, ticker, start, end, interval):
+    def fetch(self, ticker: str, start: Any, end: Any, interval: str) -> pd.DataFrame:
         if interval != "1d":
             raise SourceError("stooq supports daily only")
         symbol = ticker.lower()

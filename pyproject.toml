@@ -42,5 +42,9 @@ line-length = 88
 target-version = "py39"
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["pandas", "pandas.*", "platformdirs"]
+ignore_missing_imports = true

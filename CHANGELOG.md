@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Fix `mypy --strict` failures (missing annotations, untyped pandas
+  imports, unsupported `python_version`) that broke CI for the `v0.1.1`
+  tag before it could publish. No behavior change.
+
 ## 0.1.1
 
 - First functional release. The `0.1.0` tag/PyPI upload shipped only empty

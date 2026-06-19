@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import pandas as pd
 
@@ -10,7 +10,7 @@ class Source(Protocol):
     name: str
     requires_key: bool
 
-    def fetch(self, ticker: str, start, end, interval: str) -> pd.DataFrame:
+    def fetch(self, ticker: str, start: Any, end: Any, interval: str) -> pd.DataFrame:
         """Return a RAW frame (any shape). The engine will normalize it.
         Raise RateLimited / SourceError on failure."""
         ...

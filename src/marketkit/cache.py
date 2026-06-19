@@ -14,7 +14,9 @@ def _path(source: str, ticker: str, interval: str) -> Path:
     return CACHE_DIR / f"{source}__{safe}__{interval}.parquet"
 
 
-def read(source: str, ticker: str, interval: str, *, offline: bool = False):
+def read(
+    source: str, ticker: str, interval: str, *, offline: bool = False
+) -> tuple[pd.DataFrame | None, bool]:
     """Return (df, is_fresh) or (None, False) if no cache."""
     p = _path(source, ticker, interval)
     if not p.exists():

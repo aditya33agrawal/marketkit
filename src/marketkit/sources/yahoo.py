@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 import requests
 
@@ -14,8 +16,8 @@ class YahooSource:
     name = "yahoo"
     requires_key = False
 
-    def fetch(self, ticker, start, end, interval):
-        params = {
+    def fetch(self, ticker: str, start: Any, end: Any, interval: str) -> pd.DataFrame:
+        params: dict[str, Any] = {
             "period1": int(pd.Timestamp(start).timestamp()),
             "period2": int(pd.Timestamp(end).timestamp()),
             "interval": interval,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 
 from marketkit.analytics.returns import cagr
@@ -7,7 +9,7 @@ from marketkit.analytics.risk import drawdown, sharpe, volatility
 from marketkit.fetch import get
 
 
-def summary(ticker, *, period="1y", **kw):
+def summary(ticker: str, *, period: str = "1y", **kw: Any) -> pd.Series:
     df = get(ticker, period=period, **kw)
     _, max_dd = drawdown(df)
     return pd.Series(
