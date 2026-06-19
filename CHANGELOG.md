@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Also ignore missing type stubs for `requests` under mypy strict mode
+  (CI's Python 3.9 job didn't have requests' bundled types resolved the
+  same way the dev environment did). No behavior change.
+
 ## 0.1.2
 
 - Fix `mypy --strict` failures (missing annotations, untyped pandas
