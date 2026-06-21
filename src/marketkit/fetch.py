@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import pandas as pd
@@ -10,6 +11,13 @@ from marketkit.errors import DataUnavailable, InvalidRequest, RateLimited, Sourc
 from marketkit.sources.base import get_source
 
 _PERIOD_YEARS = {"1y": 1, "2y": 2, "5y": 5, "10y": 10, "max": 50}
+
+# Daily/weekly/monthly are the well-supported intervals across both sources.
+# Intraday intervals work against Yahoo only (Stooq is EOD-only and already
+# raises SourceError for them, which the fallback loop handles).
+SUPPORTED_INTERVALS = {"1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"}
+# Intraday bars go stale fast; shorten the cache TTL for them.
+_INTRADAY_TTL_SECONDS = 5 * 60
 
 
 def _resolve_dates(
@@ -40,9 +48,13 @@ def _get_one(
     sources: list[str],
     offline: bool,
 ) -> pd.DataFrame:
+    if interval not in SUPPORTED_INTERVALS:
+        raise InvalidRequest(f"unsupported interval '{interval}'")
+    ttl = _INTRADAY_TTL_SECONDS if interval not in ("1d", "1wk", "1mo") else None
+
     # 1) try cache
     for src in sources:
-        df, fresh = cache.read(src, ticker, interval, offline=offline)
+        df, fresh = cache.read(src, ticker, interval, offline=offline, ttl_seconds=ttl)
         if df is not None and fresh and _covers(df, start, end):
             return df.loc[start:end]
     if offline:
@@ -101,12 +113,42 @@ def get(
             tickers.upper(), start_ts, end_ts, interval, resolved_sources, resolved_offline
         )
 
+    symbols = [t.upper() for t in tickers]
     frames: dict[str, pd.DataFrame] = {}
-    for t in tickers:
-        try:
-            frames[t.upper()] = _get_one(
-                t.upper(), start_ts, end_ts, interval, resolved_sources, resolved_offline
-            )
-        except DataUnavailable:
-            continue  # skip failed tickers, don't kill the whole call
+    max_workers = min(8, len(symbols)) or 1
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {
+            pool.submit(
+                _get_one, sym, start_ts, end_ts, interval, resolved_sources, resolved_offline
+            ): sym
+            for sym in symbols
+        }
+        for future, sym in futures.items():
+            try:
+                frames[sym] = future.result()
+            except DataUnavailable:
+                continue  # skip failed tickers, don't kill the whole call
     return _combine(frames, wide=wide)
+
+
+def resample(data: pd.DataFrame, interval: str) -> pd.DataFrame:
+    """Resample a canonical daily OHLCV frame to a coarser interval (e.g. "1wk", "1mo").
+
+    Aggregation follows standard OHLCV rules: open=first, high=max, low=min,
+    close/adj_close=last, volume=sum.
+    """
+    freq = {"1wk": "W", "1mo": "M"}.get(interval)
+    if freq is None:
+        raise InvalidRequest(f"resample target must be '1wk' or '1mo', got '{interval}'")
+
+    agg = {
+        "open": "first",
+        "high": "max",
+        "low": "min",
+        "close": "last",
+        "adj_close": "last",
+        "volume": "sum",
+    }
+    cols = {k: v for k, v in agg.items() if k in data.columns}
+    out = data.resample(freq).agg(cols)
+    return out.dropna(how="all")

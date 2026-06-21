@@ -166,7 +166,9 @@ venv.bak/
 
 # mkdocs documentation
 /site
-docs/
+# Built docs site only — keep source docs (docs/*.md) tracked
+docs/_build/
+docs/site/
 
 # mypy
 .mypy_cache/

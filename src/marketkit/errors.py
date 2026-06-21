@@ -16,3 +16,11 @@ class DataUnavailable(MarketkitError):
 
 class InvalidRequest(MarketkitError):
     """The caller passed bad arguments (bad ticker, bad date range, bad interval)."""
+
+
+class PlottingUnavailable(MarketkitError):
+    """matplotlib isn't installed; run `pip install marketkit[plot]`."""
+
+
+class OptionalDependencyMissing(MarketkitError):
+    """An optional dependency for this feature isn't installed."""

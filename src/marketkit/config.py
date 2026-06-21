@@ -15,7 +15,16 @@ DEFAULT_SOURCE_ORDER = ["yahoo", "stooq"]
 CACHE_TTL_SECONDS = 60 * 60 * 12  # 12h
 
 # Trading periods per year, by interval (for annualizing)
-PERIODS_PER_YEAR = {"1d": 252, "1wk": 52, "1mo": 12}
+PERIODS_PER_YEAR = {
+    "1m": 252 * 6.5 * 60,
+    "5m": 252 * 6.5 * 12,
+    "15m": 252 * 6.5 * 4,
+    "30m": 252 * 6.5 * 2,
+    "1h": 252 * 7,
+    "1d": 252,
+    "1wk": 52,
+    "1mo": 12,
+}
 
 # HTTP
 REQUEST_TIMEOUT = 15

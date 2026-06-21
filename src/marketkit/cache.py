@@ -15,7 +15,12 @@ def _path(source: str, ticker: str, interval: str) -> Path:
 
 
 def read(
-    source: str, ticker: str, interval: str, *, offline: bool = False
+    source: str,
+    ticker: str,
+    interval: str,
+    *,
+    offline: bool = False,
+    ttl_seconds: int | None = None,
 ) -> tuple[pd.DataFrame | None, bool]:
     """Return (df, is_fresh) or (None, False) if no cache."""
     p = _path(source, ticker, interval)
@@ -23,7 +28,8 @@ def read(
         return None, False
     df = pd.read_parquet(p)
     age = time.time() - p.stat().st_mtime
-    is_fresh = offline or age < CACHE_TTL_SECONDS
+    ttl = CACHE_TTL_SECONDS if ttl_seconds is None else ttl_seconds
+    is_fresh = offline or age < ttl
     return df, is_fresh
 
 
